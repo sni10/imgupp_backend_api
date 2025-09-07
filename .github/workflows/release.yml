@@ -1,0 +1,60 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - stage
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Get version
+      id: version
+      run: |
+        # Get the latest tag
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        echo "Latest tag: $LATEST_TAG"
+        
+        # Extract version numbers
+        VERSION=${LATEST_TAG#v}
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+        
+        # Increment patch version
+        NEW_PATCH=$((PATCH + 1))
+        NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+        
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "New version: $NEW_VERSION"
+    
+    - name: Create release branch
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        RELEASE_BRANCH="release/${{ steps.version.outputs.version }}"
+        git checkout -b $RELEASE_BRANCH
+        git push origin $RELEASE_BRANCH
+        
+        echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        release_name: Release ${{ steps.version.outputs.version }}
+        body: |
+          ## Changes
+          Auto-generated release from stage branch.
+          
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.version.outputs.version }}...HEAD
+        draft: false
+        prerelease: false
