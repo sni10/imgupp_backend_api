@@ -1,0 +1,33 @@
+{% extends "admin/photomanager/profile/admin.html" %}
+
+{% load static %}  <!-- Добавьте эту строку в начало файла -->
+
+{% block extrahead %}
+    {{ block.super }}
+    <link href="{% static 'css/init.css' %}" rel="stylesheet">
+    <script src="{% static 'js/init.js' %}"></script>
+{% endblock %}
+
+{% block ololo %}
+    {{ block.super }}
+
+        <div class="jumbotron">
+            <h1 class="display-4">Дополнительная информация</h1>
+            <p class="lead">Здесь можно добавить свой HTML для отображения дополнительной информации или элементов управления.</p>
+            <hr class="my-4">
+            {% if request.user.is_authenticated %}
+                <div class="mb-3">
+                    <strong>Имя пользователя:</strong> {{ request.user.username }}
+                </div>
+                <div class="mb-3">
+                    <strong>ID сеанса:</strong> {{ request.session.session_key }}
+                </div>
+                <div class="mb-3">
+                    <strong>Время истечения срока действия:</strong> {{ request.session.get_expiry_date }}
+                </div>
+            {% else %}
+                <p>Пользователь не авторизован.</p>
+            {% endif %}
+        </div>
+
+{% endblock %}

@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  django:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - DB_NAME=imgupp
+      - DB_USER=imgupp
+      - DB_PASSWORD=imgupp
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - MONGO_DB_NAME=imgupp
+      - MONGO_DB_HOST=mongodb
+      - MONGO_DB_PORT=27017
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+    volumes:
+      - .:/imgupp_root
+      - ./media:/imgupp_root/media
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: imgupp
+      POSTGRES_USER: imgupp
+      POSTGRES_PASSWORD: imgupp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:6.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: imgupp
+      MONGO_INITDB_ROOT_PASSWORD: imgupp
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7.0
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:

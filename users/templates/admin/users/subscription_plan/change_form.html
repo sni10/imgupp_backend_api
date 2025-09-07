@@ -1,0 +1,8 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link href="{% static 'css/init.css' %}" rel="stylesheet">
+<script src="{% static 'js/init.js' %}"></script>
+{% endblock %}
