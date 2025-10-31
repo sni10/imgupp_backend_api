@@ -1,0 +1,44 @@
+name: Hotfix Workflow
+
+on:
+  push:
+    branches:
+      - 'hotfix/*'
+
+jobs:
+  hotfix:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    
+    - name: Create Pull Requests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        HOTFIX_BRANCH=${GITHUB_REF#refs/heads/}
+        echo "Creating PRs for hotfix branch: $HOTFIX_BRANCH"
+        
+        # Create PR to main
+        gh pr create \
+          --title "Hotfix: $HOTFIX_BRANCH" \
+          --body "Hotfix from $HOTFIX_BRANCH to main" \
+          --base main \
+          --head $HOTFIX_BRANCH \
+          --label "hotfix" || echo "PR to main already exists"
+        
+        # Create PR to dev  
+        gh pr create \
+          --title "Hotfix: $HOTFIX_BRANCH to dev" \
+          --body "Hotfix from $HOTFIX_BRANCH to dev" \
+          --base dev \
+          --head $HOTFIX_BRANCH \
+          --label "hotfix" || echo "PR to dev already exists"

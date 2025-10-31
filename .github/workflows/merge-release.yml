@@ -1,0 +1,40 @@
+name: Merge Release
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  merge-back:
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    
+    - name: Merge release back to dev
+      run: |
+        RELEASE_BRANCH="${{ github.head_ref }}"
+        echo "Merging $RELEASE_BRANCH back to dev"
+        
+        git checkout dev
+        git pull origin dev
+        git merge origin/$RELEASE_BRANCH --no-ff -m "Merge $RELEASE_BRANCH back to dev"
+        git push origin dev
+    
+    - name: Delete release branch
+      run: |
+        RELEASE_BRANCH="${{ github.head_ref }}"
+        git push origin --delete $RELEASE_BRANCH

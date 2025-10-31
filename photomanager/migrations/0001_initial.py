@@ -3,6 +3,7 @@
 import django.db.models.deletion
 import photomanager.models
 import uuid
+from django.conf import settings
 from django.db import migrations, models
 
 
@@ -11,22 +12,55 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
+        # Create Profile model (linked to User)
+        migrations.CreateModel(
+            name='Profile',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('hashpath', models.CharField(default=lambda: uuid.uuid4().hex, max_length=32, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
+            ],
+        ),
+        
+        # Create Gallery model
         migrations.CreateModel(
             name='Gallery',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=100)),
+                ('title', models.CharField(blank=True, max_length=255, null=True)),
                 ('description', models.TextField(blank=True, null=True)),
+                ('hashpath', models.CharField(default=lambda: uuid.uuid4().hex, max_length=32, unique=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('hashpath', models.CharField(default=uuid.uuid4, max_length=64, unique=True)),
+                ('profile', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='galleries', to='photomanager.profile')),
+            ],
+            options={
+                'verbose_name_plural': 'Galleries',
+            },
+        ),
+        
+        # Create Image model
+        migrations.CreateModel(
+            name='Image',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('title', models.CharField(blank=True, max_length=255, null=True)),
+                ('image', models.ImageField(max_length=500, upload_to=photomanager.models.image_upload_path)),
+                ('hashpath', models.CharField(default=lambda: uuid.uuid4().hex, max_length=32, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('gallery', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='images', to='photomanager.gallery')),
             ],
         ),
+        
+        # Create Folder model (contains old Profile structure)
         migrations.CreateModel(
-            name='Profile',
+            name='Folder',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=100)),
@@ -41,19 +75,18 @@ class Migration(migrations.Migration):
                 ('hashpath', models.CharField(default=uuid.uuid4, max_length=64, unique=True)),
             ],
         ),
+        
+        # Create Post model
         migrations.CreateModel(
-            name='Image',
+            name='Post',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', models.ImageField(max_length=500, upload_to=photomanager.models.image_upload_path)),
-                ('caption', models.CharField(blank=True, max_length=255)),
+                ('title', models.CharField(max_length=100)),
+                ('description', models.TextField(blank=True, null=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
                 ('hashpath', models.CharField(default=uuid.uuid4, max_length=64, unique=True)),
-                ('gallery', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='images', to='photomanager.gallery')),
+                ('folder', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='posts', to='photomanager.folder')),
             ],
-        ),
-        migrations.AddField(
-            model_name='gallery',
-            name='profile',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='galleries', to='photomanager.profile'),
         ),
     ]

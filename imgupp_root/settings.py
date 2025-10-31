@@ -77,6 +77,10 @@ if 'test' in sys.argv or os.getenv('DJANGO_TEST', '').lower() in ('1', 'true', '
         'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
+        'rest_framework',
+        'photomanager',
+        'linkmanager',
+        'users',
     ]
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
@@ -112,7 +116,7 @@ SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -145,15 +149,6 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD', 'imgupp'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '5432'),
-    },
-    'mongodb': {
-        'ENGINE': 'djongo',
-        'NAME': os.getenv('MONGO_DB_NAME', 'imgupp'),
-        'PORT': os.getenv('MONGO_DB_PORT', 27017),
-        'ENFORCE_SCHEMA': False,
-        'CLIENT': {
-            'host': os.getenv('MONGO_DB_HOST', 'localhost'),
-        }
     }
 }
 
