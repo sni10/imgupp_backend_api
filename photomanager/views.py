@@ -12,10 +12,10 @@ import asyncio
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Image, Post
+from .models import Image, Post, Gallery, Profile
 from .serializers import ProfileSerializer, ProfileListSerializer,ImageSerializer, GalleryFullSerializer
 
-from ..tools.mysql import fetch_one
+from tools.mysql import fetch_one
 
 long = 60 * 60 * 24
 

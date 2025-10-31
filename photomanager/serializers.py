@@ -46,7 +46,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ['caption', 'uuid', 'thumbnail_url', 'image_url']
+        fields = ['title', 'uuid', 'thumbnail_url', 'image_url']
 
     def get_uuid(self, obj):
         hashpath = obj.hashpath
@@ -83,33 +83,41 @@ class GalleryPrevSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, obj):
         images = obj.images.all()
-        images = ImageSerializer(images, many=True, context=self.context).data  # Обратите внимание на передачу context
+        images_data = ImageSerializer(images, many=True, context=self.context).data
 
-        result = images[5]['image_url']
+        if len(images_data) > 0:
+            # Use first image if less than 6 images, otherwise use 6th image
+            index = min(5, len(images_data) - 1)
+            return images_data[index]['image_url']
 
-        return result
+        return None
 
     def get_thumbnail_url(self, obj):
         images = obj.images.all()
-        images = ImageSerializer(images, many=True, context=self.context).data  # Обратите внимание на передачу context
+        images_data = ImageSerializer(images, many=True, context=self.context).data
 
-        result = images[5]['thumbnail_url']
+        if len(images_data) > 0:
+            # Use first image if less than 6 images, otherwise use 6th image
+            index = min(5, len(images_data) - 1)
+            return images_data[index]['thumbnail_url']
 
-        return result
+        return None
 
 
 class ProfileListSerializer(serializers.ModelSerializer):
     galleries = serializers.SerializerMethodField()
+    username = serializers.CharField(source='user.username', read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
 
     class Meta:
         model = Profile
-        fields = ['name', 'description', 'hashpath', 'birthplace', 'measurements', 'galleries']
+        fields = ['id', 'hashpath', 'username', 'user_id', 'created_at', 'updated_at', 'galleries']
 
     def get_galleries(self, obj):
         galleries = obj.galleries.all()
-        result = GalleryPrevSerializer(galleries, many=True, context=self.context).data  # Обратите внимание на передачу context
+        result = GalleryPrevSerializer(galleries, many=True, context=self.context).data
 
-        if ( len(result) > 0 ):
+        if len(result) > 0:
             return result[0]
 
         return []
@@ -117,11 +125,13 @@ class ProfileListSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     galleries = serializers.SerializerMethodField()
+    username = serializers.CharField(source='user.username', read_only=True)
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
 
     class Meta:
         model = Profile
-        fields = ['name', 'description', 'hashpath', 'birthplace', 'measurements', 'galleries']
+        fields = ['id', 'hashpath', 'username', 'user_id', 'created_at', 'updated_at', 'galleries']
 
     def get_galleries(self, obj):
         galleries = obj.galleries.all()
-        return GalleryPrevSerializer(galleries, many=True, context=self.context).data  # Обратите внимание на передачу context
+        return GalleryPrevSerializer(galleries, many=True, context=self.context).data
